@@ -34,11 +34,9 @@ const reducer = (state, action) => {
       return state;
   }
 };
-
+export const DiaryStateContext = React.createContext();
+export const DiaryDispatchContext = React.createContext();
 function App() {
-  //리렌더링이 일어난다-> App함수가 한번 더 호출된다.
-  // const [data, setData] = useState([]);
-
   const [data, dispatch] = useReducer(reducer, []);
 
   const dataId = useRef(0);
@@ -79,6 +77,10 @@ function App() {
     dispatch({ type: "EDIT", targetId, newContent });
   }, []);
 
+  const memoizedDispathes = useMemo(() => {
+    return { onCreate, onRemove, onEdit };
+  }, []);
+
   const getDiaryAnalysis = useMemo(() => {
     const goodCount = data.filter((it) => it.emotion >= 3).length;
     const badCount = data.length - goodCount;
@@ -88,14 +90,18 @@ function App() {
 
   const { goodCount, badCount, goodRatio } = getDiaryAnalysis;
   return (
-    <div className="App">
-      <DiaryEditor onCreate={onCreate} />
-      <div>전체일기 : {data.length}</div>
-      <div>기분 좋은 일기 개수: {goodCount}</div>
-      <div>기분 나쁜 일기 개수: {badCount}</div>
-      <div>기분 좋은 일기 비율 : {goodRatio}</div>
-      <DiaryList onEdit={onEdit} onRemove={onRemove} diaryList={data} />
-    </div>
+    <DiaryStateContext.Provider value={data}>
+      <DiaryDispatchContext.Provider value={memoizedDispathes}>
+        <div className="App">
+          <DiaryEditor />
+          <div>전체일기 : {data.length}</div>
+          <div>기분 좋은 일기 개수: {goodCount}</div>
+          <div>기분 나쁜 일기 개수: {badCount}</div>
+          <div>기분 좋은 일기 비율 : {goodRatio}</div>
+          <DiaryList />
+        </div>
+      </DiaryDispatchContext.Provider>
+    </DiaryStateContext.Provider>
   );
 }
 
